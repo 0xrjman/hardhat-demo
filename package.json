@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "echo hello\n"
+    "test": "make test"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.0",
