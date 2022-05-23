@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.10;
+
+import "../dependencies/openzeppelin/contracts/ERC20.sol";
+
+
+/**
+ * @title ERC20Mintable
+ * @dev ERC20 minting logic
+ */
+contract MintableERC20 is ERC20 {
+  uint8 private _decimals;
+
+  constructor(
+    string memory name,
+    string memory symbol,
+    uint8 decimals_
+  ) ERC20(name, symbol) {
+    _setupDecimals(decimals_);
+  }
+
+  function _setupDecimals(uint8 decimals_) internal {
+    _decimals = decimals_;
+  }
+
+  function decimals() public view virtual override returns (uint8) {
+    return _decimals;
+  }
+
+  /**
+   * @dev Function to mint tokens
+   * @param value The amount of tokens to mint.
+   * @return A boolean that indicates if the operation was successful.
+   */
+  function mint(uint256 value) public returns (bool) {
+    require(value <= (1000000 * 10**18), "exceed amount limit");
+    _mint(_msgSender(), value);
+    return true;
+  }
+}

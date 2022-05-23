@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 import "hardhat/console.sol";
 
 contract MyToken {
     string public name = "My Token";
-    string public symbol = "MYT";
+    string public symbol = "MTK";
     uint256 public totalSupply = 1000000;
     address public owner;
     mapping (address => uint) public balances;

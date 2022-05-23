@@ -21,7 +21,7 @@ describe("MyToken", function () {
         })
 
         it("symbol is correct", async () => {
-            expect(await token.symbol()).to.equal("MYT")
+            expect(await token.symbol()).to.equal("MTK")
         })
 
         it("owner has total supply", async () => {
