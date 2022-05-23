@@ -1,3 +1,7 @@
+.PHONY: init
+init:
+	npm i
+
 .PHONY: test
 test:
 	npx hardhat compile
