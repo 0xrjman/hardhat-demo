@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 /// @title A simple on-chain price oracle mechanism
 /// @author github.com/drbh
 /// @notice Offchain clients can update the prices in this contract. The public can read prices
-contract NftOraclePrice is AccessControl {
+contract NFTFloorOracle is AccessControl {
     bytes32 public constant UPDATER_ROLE = keccak256("UPDATER_ROLE");
 
 	struct OracleConfig {
@@ -19,7 +19,8 @@ contract NftOraclePrice is AccessControl {
 		uint256 price;
 		uint256 twap;
 		uint256 ema;
-		uint256 blockLast;
+		uint256 lastUpdateTime;
+		bool    isReady;
 	}
 
 	/// @dev address of the NFT contract -> price information
@@ -47,7 +48,7 @@ contract NftOraclePrice is AccessControl {
 		priceMapEntry.price = price;
 		priceMapEntry.twap = twap;
 		priceMapEntry.ema = ema;
-		priceMapEntry.blockLast = block.number;
+		priceMapEntry.lastUpdateTime = block.timestamp;
 	}
 
 	/// @notice Allows owner to set new price on PriceInformation and updates the
@@ -71,6 +72,13 @@ contract NftOraclePrice is AccessControl {
 	}
 
 	/// @param token The nft contract
+	function setIsReady(address token) public {
+		/// @dev get storage ref for gas savings
+		PriceInformation storage priceMapEntry = priceMap[token];
+		priceMapEntry.isReady = true;
+	}
+
+	/// @param token The nft contract
 	/// @return price The most recent price on chain
 	function getPrice(address token) view public returns(uint256 price) {
 		return priceMap[token].price;
@@ -89,8 +97,8 @@ contract NftOraclePrice is AccessControl {
 	}
 
 	/// @param token The nft contract
-	/// @return price The last block the price was updated
-	function getBlockLast(address token) view public returns(uint256 price) {
-		return priceMap[token].blockLast;
+	/// @return timestamp The timestamp of the last update for an asset
+	function getLastUpdateTime(address token) view public returns(uint256 timestamp) {
+		return priceMap[token].lastUpdateTime;
 	}
 }
