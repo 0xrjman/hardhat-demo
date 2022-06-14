@@ -10,17 +10,13 @@ contract NFTFloorOracle is AccessControl {
     bytes32 public constant UPDATER_ROLE = keccak256("UPDATER_ROLE");
 
 	struct OracleConfig {
-		uint256 twapPeriod;
-		uint256 emaPeriod;
+		uint128 twapPeriod;
 	}
 
 	struct PriceInformation {
 		/// @dev last reported floor price
-		uint256 price;
-		uint256 twap;
-		uint256 ema;
-		uint256 lastUpdateTime;
-		bool    isReady;
+		uint128 twap;
+		uint64 lastUpdateTime;
 	}
 
 	/// @dev address of the NFT contract -> price information
@@ -29,76 +25,55 @@ contract NFTFloorOracle is AccessControl {
 	/// @dev storage for oracle configurations
 	OracleConfig config;
 
-	constructor() {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(UPDATER_ROLE, msg.sender);
+	/// @notice Allow contract creator to set admin and first updater
+	/// @param admin The admin who can change roles
+	/// @param updaters The inital updaters
+	constructor(address admin, address[] memory updaters) {
+        _setupRole(DEFAULT_ADMIN_ROLE, admin);
+
+		for (uint i=0; i < updaters.length; i++) {
+			_setupRole(UPDATER_ROLE, updaters[i]);
+		}
 	}
 
 	/// @notice Allows owner to set new price on PriceInformation and updates the
 	/// internal TWAP cumulativePrice.
 	/// @param token The nft contracts to set a floor price for
-	/// @param price The last floor price
 	/// @param twap The last floor twap
-	/// @param ema The last floor ema
-	function setPrice(address token, uint256 price, uint256 twap, uint256 ema) onlyRole(UPDATER_ROLE) public {
+	function setPrice(address token, uint128 twap) onlyRole(UPDATER_ROLE) public {
 		/// @dev get storage ref for gas savings
 		PriceInformation storage priceMapEntry = priceMap[token];
 
 		/// @dev set values
-		priceMapEntry.price = price;
 		priceMapEntry.twap = twap;
-		priceMapEntry.ema = ema;
-		priceMapEntry.lastUpdateTime = block.timestamp;
+		priceMapEntry.lastUpdateTime = uint64(block.timestamp);
 	}
 
 	/// @notice Allows owner to set new price on PriceInformation and updates the
 	/// internal TWAP cumulativePrice.
 	/// @param tokens The nft contract to set a floor price for
-	/// @param prices The last floor prices
-	/// @param twaps The last floor twaps
-	function setMultiplePrices(address[] calldata tokens, uint256[] calldata prices, uint256[] calldata twaps, uint256[] calldata emas) onlyRole(UPDATER_ROLE) public {
-		require(tokens.length == prices.length, "Tokens and price length differ");
+	function setMultiplePrices(address[] calldata tokens, uint128[] calldata twaps) onlyRole(UPDATER_ROLE) public {
+		require(tokens.length == twaps.length, "Tokens and price length differ");
 		for(uint i; i<tokens.length; i++) {
-			setPrice(tokens[i], prices[i], twaps[i], emas[i]);
+			setPrice(tokens[i], twaps[i]);
 		}
 	}
 
 	/// @notice Allows owner to update oracle configs
 	/// @param twapPeriod The period of the time weighted average price
-	/// @param emaPeriod The period of the exponential moving average price
-	function setConfig(uint256 twapPeriod, uint256 emaPeriod) onlyRole(UPDATER_ROLE) public {
+	function setConfig(uint128 twapPeriod) onlyRole(UPDATER_ROLE) public {
 		config.twapPeriod = twapPeriod;
-		config.emaPeriod = emaPeriod;
-	}
-
-	/// @param token The nft contract
-	function setIsReady(address token) public {
-		/// @dev get storage ref for gas savings
-		PriceInformation storage priceMapEntry = priceMap[token];
-		priceMapEntry.isReady = true;
-	}
-
-	/// @param token The nft contract
-	/// @return price The most recent price on chain
-	function getPrice(address token) view public returns(uint256 price) {
-		return priceMap[token].price;
 	}
 
 	/// @param token The nft contract
 	/// @return twap The most recent twap on chain
-	function getTwap(address token) view public returns(uint256 twap) {
+	function getTwap(address token) view public returns(uint128 twap) {
 		return priceMap[token].twap;
 	}
 
 	/// @param token The nft contract
-	/// @return ema The most recent ema on chain
-	function getEma(address token) view public returns(uint256 ema) {
-		return priceMap[token].ema;
-	}
-
-	/// @param token The nft contract
 	/// @return timestamp The timestamp of the last update for an asset
-	function getLastUpdateTime(address token) view public returns(uint256 timestamp) {
+	function getLastUpdateTime(address token) view public returns(uint128 timestamp) {
 		return priceMap[token].lastUpdateTime;
 	}
 }

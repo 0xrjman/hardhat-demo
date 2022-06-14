@@ -5,11 +5,16 @@
 // Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
 import { ContractTransaction } from "ethers";
+import { NFTFloorOracle__factory } from "../../typechain";
 
 async function main() {
   console.log("Deploying NFTFloorOracle...");
-  const NftOraclePrice = await ethers.getContractFactory("NFTFloorOracle");
-  const nftOraclePrice = await NftOraclePrice.deploy();
+  const NftOraclePrice: NFTFloorOracle__factory =
+    await ethers.getContractFactory("NFTFloorOracle");
+  const nftOraclePrice = await NftOraclePrice.deploy(
+    "0xC87255ade7F6d083d0558efA98d3CA38D9EcF8B5",
+    ["0xC87255ade7F6d083d0558efA98d3CA38D9EcF8B5", "0x75E480dB528101a381Ce68544611C169Ad7EB342"]
+  );
   console.log("NFTFloorOracle deployed to:", nftOraclePrice.address);
 }
 
